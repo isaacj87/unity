@@ -112,6 +112,9 @@ public:
 
   int GetMouseX() const;
   int GetMouseY() const;
+  void CheckWindowOverLauncher();
+  void EnableCheckWindowOverLauncher(gboolean enabled);
+
 
   void Resize();
 
@@ -181,6 +184,9 @@ private:
   void OnOptionChanged();
   void UpdateOptions(Options::Ptr options);
 
+  void OnWindowMaybeIntellihide(guint32 xid);
+  void OnWindowMaybeIntellihideDelayed(guint32 xid);
+  static gboolean CheckWindowOverLauncherSync(Launcher* self);
   void OnWindowMapped(guint32 xid);
   void OnWindowUnmapped(guint32 xid);
 
@@ -193,6 +199,9 @@ private:
   void OnPluginStateChanged();
 
   void OnSelectionChanged(AbstractLauncherIcon::Ptr selection);
+
+  void OnViewPortSwitchStarted();
+  void OnViewPortSwitchEnded();
 
   static gboolean AnimationTimeout(gpointer data);
   static gboolean StrutHack(gpointer data);
@@ -326,6 +335,7 @@ private:
   bool  _hidden;
   bool  _scroll_limit_reached;
   bool  _render_drag_window;
+  bool  _check_window_over_launcher;
 
   bool          _shortcuts_shown;
 
@@ -336,6 +346,8 @@ private:
   float _folded_z_distance;
   float _last_delta_y;
   float _edge_overcome_pressure;
+
+  LauncherHideMode _hidemode;
 
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
