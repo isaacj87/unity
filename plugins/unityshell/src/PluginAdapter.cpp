@@ -416,6 +416,21 @@ PluginAdapter::IsWindowMaximized(guint xid)
 }
 
 bool
+PluginAdapter::IsWindowMinimized(guint xid)
+{
+  Window win = (Window)xid;
+  CompWindow* window;
+  
+  window = m_Screen->findWindow(win);
+  if (window)
+  {
+    return window->minimized();
+  }
+  
+  return false;
+}
+
+bool
 PluginAdapter::IsWindowDecorated(guint32 xid)
 {
   Display* display = m_Screen->dpy();

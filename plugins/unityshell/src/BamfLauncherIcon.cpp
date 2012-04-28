@@ -265,7 +265,8 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
   /* Behaviour:
    * 1) Nothing running, or nothing visible -> launch application
-   * 2) Running and active -> spread application
+   * 2a) Running and active with more than one window -> spread application
+   * 2b) Running and active with only one window -> minimize application
    * 3) Running and not active -> focus application
    * 4) Spread is active and different icon pressed -> change spread
    * 5) Spread is active -> Spread de-activated, and fall through
@@ -297,7 +298,11 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       {
         if (arg.source != ActionArg::SWITCHER)
         {
-          Spread(true, 0, false);
+          std::vector<Window> windowList = GetWindows(WindowFilter::MAPPED|WindowFilter::ON_CURRENT_DESKTOP);
+          if (windowList.size() == 1)
+            Minimize(windowList);
+          else if (windowList.size() > 1)
+            Spread(windowList, 0, false);
         }
       }
     }
@@ -308,7 +313,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
         wm->TerminateScale();
         Focus(arg);
         if (arg.source != ActionArg::SWITCHER)
-          Spread(true, 0, false);
+          Spread(GetWindows(WindowFilter::MAPPED|WindowFilter::ON_CURRENT_DESKTOP), 0, false);
       }
       else // #3 above
       {
@@ -649,11 +654,17 @@ void BamfLauncherIcon::Focus(ActionArg arg)
   wm->FocusWindowGroup(windows, visibility, arg.monitor, only_top_win);
 }
 
-bool BamfLauncherIcon::Spread(bool current_desktop, int state, bool force)
+bool BamfLauncherIcon::Spread(std::vector<Window> windowList, int state, bool force)
 {
-  auto windows = GetWindows(current_desktop ? WindowFilter::ON_CURRENT_DESKTOP : 0);
-  return WindowManager::Default()->ScaleWindowGroup(windows, state, force);
+  return WindowManager::Default()->ScaleWindowGroup(windowList, state, force);
 }
+
+void BamfLauncherIcon::Minimize(std::vector<Window> windowList)
+{
+  for (unsigned int i = 0; i < windowList.size(); i++)
+    WindowManager::Default()->Minimize(windowList[i]);
+}
+
 
 void BamfLauncherIcon::EnsureWindowState()
 {
@@ -862,6 +873,30 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
 
   dbusmenu_menuitem_property_set(_menu_items["Pin"], DBUSMENU_MENUITEM_PROP_LABEL, label);
 
+  /* Minimize */
+  if (_menu_items.find("Minimize") == _menu_items.end())
+  {
+    menu_item = dbusmenu_menuitem_new();
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Minimize"));
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+    
+    _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                                    [&] (DbusmenuMenuitem*, int) {
+                                      Minimize(GetWindows(WindowFilter::MAPPED|WindowFilter::ON_CURRENT_DESKTOP));
+                                    }));
+    _menu_items["Minimize"] = glib::Object<DbusmenuMenuitem>(menu_item);
+  }
+  
+  bool any_not_minimized = false;
+  WindowManager *wm = WindowManager::Default();
+  std::vector<Window> windowList = GetWindows(WindowFilter::MAPPED|WindowFilter::USER_VISIBLE|WindowFilter::ON_CURRENT_DESKTOP);
+  for (auto it = windowList.begin(); it != windowList.end(); ++it)
+  {
+    if (!wm->IsWindowMinimized(*it)) any_not_minimized = true;
+  }
+  
+  dbusmenu_menuitem_property_set_bool(_menu_items["Minimize"], DBUSMENU_MENUITEM_PROP_ENABLED, IsVisible() && any_not_minimized); 
 
   /* Quit */
   if (_menu_items.find("Quit") == _menu_items.end())
@@ -1009,7 +1044,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
 
   for (auto it_m = _menu_items.begin(); it_m != _menu_items.end(); ++it_m)
   {
-    if (!IsRunning() && it_m->first == "Quit")
+    if (!IsRunning() && (it_m->first == "Quit" || it_m->first == "Minimize"))
       continue;
 
     bool exists = false;

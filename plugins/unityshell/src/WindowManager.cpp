@@ -52,6 +52,11 @@ class WindowManagerDummy : public WindowManager
   {
     return false;
   }
+  
+  bool IsWindowMinimized(guint32 xid)
+  {
+    return false;
+  }
 
   bool IsWindowDecorated(guint32 xid)
   {

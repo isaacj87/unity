@@ -116,6 +116,7 @@ public:
 
   // WindowManager implementation
   bool IsWindowMaximized(guint xid);
+  bool IsWindowMinimized(guint xid);
   bool IsWindowDecorated(guint xid);
   bool IsWindowOnCurrentDesktop(guint xid);
   bool IsWindowObscured(guint xid);

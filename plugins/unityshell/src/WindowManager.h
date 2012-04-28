@@ -52,6 +52,7 @@ public:
   virtual guint32 GetActiveWindow() = 0;
 
   virtual bool IsWindowMaximized(guint32 xid) = 0;
+  virtual bool IsWindowMinimized(guint xid) = 0;
   virtual bool IsWindowDecorated(guint32 xid) = 0;
   virtual bool IsWindowOnCurrentDesktop(guint32 xid) = 0;
   virtual bool IsWindowObscured(guint32 xid) = 0;

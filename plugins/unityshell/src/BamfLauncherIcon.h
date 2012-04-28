@@ -107,7 +107,8 @@ private:
 
   void OpenInstanceWithUris(std::set<std::string> uris);
   void Focus(ActionArg arg);
-  bool Spread(bool current_desktop, int state, bool force);
+  bool Spread(std::vector<Window> windowList, int state, bool force);
+  void Minimize(std::vector<Window> windowList);
 
   void OnWindowMinimized(guint32 xid);
   void OnWindowMoved(guint32 xid);
