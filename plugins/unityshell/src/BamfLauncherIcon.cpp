@@ -269,7 +269,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
    * 2b) Running and active with only one window -> minimize application
    * 3) Running and not active -> focus application
    * 4) Spread is active and different icon pressed -> change spread
-   * 5) Spread is active -> Spread de-activated, and minimize all windows
+   * 5) Spread is active -> Spread de-activated, and fall through
    */
 
   if (!IsRunning() || (IsRunning() && !user_visible)) // #1 above
@@ -293,9 +293,6 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       {
         wm->TerminateScale();
         Focus(arg);
-        std::vector<Window> windowList = GetWindows(WindowFilter::MAPPED|WindowFilter::ON_CURRENT_DESKTOP);
-        if (windowList.size() > 1)
-          Minimize(windowList);
       }
       else // #2 above
       {
