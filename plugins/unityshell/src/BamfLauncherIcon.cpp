@@ -293,9 +293,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       {
         wm->TerminateScale();
         Focus(arg);
-        std::vector<Window> windowList = GetWindows(WindowFilter::MAPPED|WindowFilter::ON_CURRENT_DESKTOP);
-        if (windowList.size() > 1)
-          Minimize(windowList);
+        Minimize(GetWindows(WindowFilter::MAPPED|WindowFilter::ON_CURRENT_DESKTOP));
       }
       else // #2 above
       {
